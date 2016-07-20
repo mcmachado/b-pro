@@ -9,12 +9,12 @@ void addRelativeFeaturesIndices(const int **screen, int featureIndex, vector<vec
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed);
 
 extern "C" int getNumberOfFeatures(long numRows, long numColumns, long numColors){
-	long long numBasicFeatures = numColumns * numRows * numColors;
-	long long numRelativeFeatures = (2 * numColumns - 1) * (2 * numRows - 1) * (1 + numColors) * numColors/2;
+    long long numBasicFeatures = numColumns * numRows * numColors;
+    long long numRelativeFeatures = (2 * numColumns - 1) * (2 * numRows - 1) * (1 + numColors) * numColors/2;
     return numBasicFeatures + numRelativeFeatures + 1;
 }
 
-extern "C" void getBROSFeatures(const int **screen, long screenWidth, long screenHeight, long numRows, long numColumns, long numColors){
+extern "C" void getBROSFeatures(const int **screen, long screenHeight, long screenWidth, long numRows, long numColumns, long numColors){
 
 	vector<int> features;
 	int blockWidth   = screenWidth / numColumns;
@@ -29,6 +29,10 @@ extern "C" void getBROSFeatures(const int **screen, long screenWidth, long scree
 
 	//Bias
 	features.push_back(getNumberOfFeatures(numRows, numColumns, numColors));
+}
+
+int getPixel(int x, int y, const int *screen, long screenHeight, long screenWidth){
+    return screen[x * screenWidth + y];
 }
 
 int getBasicFeaturesIndices(const int **screen, int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors, int numRows, int numColumns, int numColors, vector<int>& features){
@@ -54,8 +58,8 @@ int getBasicFeaturesIndices(const int **screen, int blockWidth, int blockHeight,
 			for(int c = 0; c < numColors; c++){
 				if(hasColor[c]){
                     tuple<int,int> pos (by,bx);
-					whichColors[c].push_back(pos);
-					features.push_back(featureIndex);
+                    whichColors[c].push_back(pos);
+                    features.push_back(featureIndex);
 				}
 				featureIndex++;
 			}
@@ -125,7 +129,6 @@ void addRelativeFeaturesIndices(const int **screen, int featureIndex, vector<vec
         }
     }
 }
-
 
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed){
     for (vector<tuple<int,int> >::iterator it = changed.begin(); it!=changed.end(); it++){
