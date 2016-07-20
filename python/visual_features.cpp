@@ -16,6 +16,7 @@
 #include <set>
 #include <tuple>
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -28,23 +29,41 @@ typedef vector<tuple<int,int> >::iterator t_iter;
 
 int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWidth,
     int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors, 
-    int numRows, int numColumns, int numColors, vector<int>& features);
+    int numRows, int numColumns, int numColors, vector<int> *features);
 
 
 void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
-    vector<vector<tuple<int, int> > > &whichColors, long numRows,
-    long numColumns, long numColors, vector<int>& features);
+    vector<vector<tuple<int, int> > > &whichColors, int numRows,
+    int numColumns, int numColors, vector<int> *features);
 
 
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed);
 
+extern "C" {
+    vector<int>* new_vector(){
+        return new vector<int>;
+    }
+    void delete_vector(vector<int>* v){
+        cout << "Destructor called in C++ for " << v << endl;
+        delete v;
+    }
+    int vector_size(vector<int>* v){
+        return v->size();
+    }
+    int vector_get(vector<int>* v, int i){
+        return v->at(i);
+    }
+    void vector_push_back(vector<int>* v, int i){
+        v->push_back(i);
+    }
+}
 
 /* This function returns the maximum number of features that can be generated given
    the number of tiles (numRows and numColumns) and the number of colors (numColors)
    to be used by this representation. This is useful knowledge so we can allocate
    vectors with the appropriate size (although they should be very sparse.
 */
-extern "C" int getNumberOfFeatures(long numRows, long numColumns, long numColors){
+extern "C" int getNumberOfFeatures(int numRows, int numColumns, int numColors){
     
     long long numBasicFeatures = numColumns * numRows * numColors;
     long long numRelativeFeatures = 
@@ -58,10 +77,10 @@ extern "C" int getNumberOfFeatures(long numRows, long numColumns, long numColors
    to generate the indices than to generate the whole (huge) vector with a bunch of
    zeros. B-PROS features are described in the reference aforementioned.
 */
-extern "C" void getBROSFeatures(const u_char *screen, long screenHeight, long screenWidth, 
-    long numRows, long numColumns, long numColors){
+extern "C" void getBROSFeatures(vector<int>* features, const u_char *screen, int screenHeight,
+    int screenWidth, int numRows, int numColumns, int numColors){
 
-	vector<int> features;
+	//vector<int> features;
 	int blockWidth   = screenWidth / numColumns;
 	int blockHeight  = screenHeight / numRows;
 
@@ -71,19 +90,22 @@ extern "C" void getBROSFeatures(const u_char *screen, long screenHeight, long sc
 	int featureIndex = getBasicFeaturesIndices(screen, screenHeight, screenWidth,
         blockWidth, blockHeight, whichColors, numRows, numColumns, numColors, features);
 
+    printf("Num Basic Features: %ld\n", features->size());
     // We now add the PROS features, the pairwise combination of pixels.
     addRelativeFeaturesIndices(screen, featureIndex, whichColors,
         numRows, numColumns, numColors, features);
 
+    printf("Total Num Features: %ld\n", features->size() + 1);
+
 	// Bias
-	features.push_back(getNumberOfFeatures(numRows, numColumns, numColors));
+	features->push_back(getNumberOfFeatures(numRows, numColumns, numColors));
 }
 
 /* Because this is used by the Python interface, in the ALE one receives a vector
    concatenating all matrix rows. Because of that, this method is required to make
    sure we can still access the matrix given x, y coordinates.
 */
-u_char getPixel(int i, int j, const u_char *screen, long screenHeight, long screenWidth){
+u_char getPixel(int i, int j, const u_char *screen, int screenHeight, int screenWidth){
 
     return screen[i * screenWidth + j];
 }
@@ -96,7 +118,7 @@ u_char getPixel(int i, int j, const u_char *screen, long screenHeight, long scre
 */
 int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWidth,
     int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors,
-    int numRows, int numColumns, int numColors, vector<int>& features){
+    int numRows, int numColumns, int numColors, vector<int> *features){
 
     int featureIndex = 0;
 	// For each pixel block
@@ -119,7 +141,7 @@ int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWi
 				if(hasColor[c]){
                     tuple<int,int> pos (by,bx);
                     whichColors[c].push_back(pos);
-                    features.push_back(featureIndex);
+                    features->push_back(featureIndex);
 				}
 				featureIndex++;
 			}
@@ -133,8 +155,8 @@ int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWi
    See reference available in the header for further details.
 */
 void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
-    vector<vector<tuple<int, int> > > &whichColors, long numRows,
-    long numColumns, long numColors, vector<int>& features){
+    vector<vector<tuple<int, int> > > &whichColors, int numRows,
+    int numColumns, int numColors, vector<int> *features){
 
 	vector<tuple<int,int> > changed;
 	vector<vector<bool> > bproExistence;
@@ -151,7 +173,7 @@ void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
 	int numColumnOffsets = 2 * numColumns - 1;
 	int numOffsets       = numRowOffsets * numColumnOffsets;
 	int numColorPairs    = (1 + numColors) * numColors/2;
-	long long numBasicFeatures = numColumns * numRows * numColors;
+	int numBasicFeatures = numColumns * numRows * numColors;
     
     for(int c1 = 0;c1 < numColors; c1++){
         for(int k = 0; k < whichColors[c1].size(); k++){
@@ -170,7 +192,7 @@ void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
                     tuple<int,int> pos(rowDelta,columnDelta);
                     changed.push_back(pos);
                     bproExistence[rowDelta][columnDelta] = false;
-                    features.push_back(numBasicFeatures + (numColors + numColors - c1 + 1) 
+                    features->push_back(numBasicFeatures + (numColors + numColors - c1 + 1) 
                         * c1/2 * numRowOffsets * numColumnOffsets 
                         + rowDelta * numColumnOffsets + columnDelta);
                 }
@@ -188,7 +210,7 @@ void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
                             tuple<int,int> pos(rowDelta, columnDelta);
                             changed.push_back(pos);
                             bproExistence[rowDelta][columnDelta] = false;
-                            features.push_back(numBasicFeatures + (numColors + numColors - c1 + 1)
+                            features->push_back(numBasicFeatures + (numColors + numColors - c1 + 1)
                                 * c1/2 * numRowOffsets * numColumnOffsets
                                 + (c2 - c1) * numRowOffsets * numColumnOffsets
                                 + rowDelta * numColumnOffsets + columnDelta);
