@@ -57,15 +57,8 @@ def main():
 	screen = (ctypes.c_char_p * len(pyScreen))()
 	screen[:] = pyScreen
 
-	for i in xrange(screenHeight):
-		for j in xrange(screenWidth):
-			pixel = visual_features.getPixel(i, j, 
-				screen, screenHeight, screenWidth)
-			if pixel != 0:
-				print i, j, pixel
-
-	#visual_features.getBROSFeatures(screen, screenHeight, screenWidth, 
-	#	param.getNumRows(), param.getNumColumns(), param.getNumColors())
+	visual_features.getBROSFeatures(screen, screenHeight, screenWidth, 
+		param.getNumRows(), param.getNumColumns(), param.getNumColors())
 
 	# we play the game once, we need data (screens)
 	# to call the functions we are interested at

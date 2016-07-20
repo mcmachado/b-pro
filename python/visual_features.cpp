@@ -4,17 +4,33 @@
 
 using namespace std;
 
-int getBasicFeaturesIndices(const int **screen, int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors, int numRows, int numColumns, int numColors, vector<int>& features);
-void addRelativeFeaturesIndices(const int **screen, int featureIndex, vector<vector<tuple<int, int> > > &whichColors, long numRows, long numColumns, long numColors, vector<int>& features);
+typedef unsigned char u_char;
+typedef vector<tuple<int,int> >::iterator t_iter;
+
+int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWidth,
+    int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors, 
+    int numRows, int numColumns, int numColors, vector<int>& features);
+
+
+void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
+    vector<vector<tuple<int, int> > > &whichColors, long numRows,
+    long numColumns, long numColors, vector<int>& features);
+
+
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed);
 
+
 extern "C" int getNumberOfFeatures(long numRows, long numColumns, long numColors){
+    
     long long numBasicFeatures = numColumns * numRows * numColors;
-    long long numRelativeFeatures = (2 * numColumns - 1) * (2 * numRows - 1) * (1 + numColors) * numColors/2;
+    long long numRelativeFeatures = 
+        (2 * numColumns - 1) * (2 * numRows - 1) * (1 + numColors) * numColors/2;
     return numBasicFeatures + numRelativeFeatures + 1;
 }
 
-extern "C" void getBROSFeatures(const int **screen, long screenHeight, long screenWidth, long numRows, long numColumns, long numColors){
+
+extern "C" void getBROSFeatures(const u_char *screen, long screenHeight, long screenWidth, 
+    long numRows, long numColumns, long numColors){
 
 	vector<int> features;
 	int blockWidth   = screenWidth / numColumns;
@@ -22,21 +38,30 @@ extern "C" void getBROSFeatures(const int **screen, long screenHeight, long scre
 
 	vector<vector<tuple<int, int> > > whichColors(numColors);
 
-	// We first get the Basic features, keeping track of the next featureIndex vector.
-	// We don't just use the Basic implementation because we need the whichColors information
-	int featureIndex = getBasicFeaturesIndices(screen, blockWidth, blockHeight, whichColors, numRows, numColumns, numColors, features);
-	addRelativeFeaturesIndices(screen, featureIndex, whichColors, numRows, numColumns, numColors, features);
+	// We first get the Basic features, keeping track of the 
+    // next featureIndex vector. We don't just use the Basic
+    // implementation because we need the whichColors information.
+	int featureIndex = getBasicFeaturesIndices(screen, screenHeight, screenWidth,
+        blockWidth, blockHeight, whichColors, numRows, numColumns, numColors, features);
+	
+    addRelativeFeaturesIndices(screen, featureIndex, whichColors,
+        numRows, numColumns, numColors, features);
 
 	//Bias
 	features.push_back(getNumberOfFeatures(numRows, numColumns, numColors));
 }
 
-int getPixel(int x, int y, const int *screen, long screenHeight, long screenWidth){
-    return screen[x * screenWidth + y];
+
+u_char getPixel(int i, int j, const u_char *screen, long screenHeight, long screenWidth){
+
+    return screen[i * screenWidth + j];
 }
 
-int getBasicFeaturesIndices(const int **screen, int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors, int numRows, int numColumns, int numColors, vector<int>& features){
-	int featureIndex = 0;
+int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWidth,
+    int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors,
+    int numRows, int numColumns, int numColors, vector<int>& features){
+
+    int featureIndex = 0;
 	// For each pixel block
 	for (int by = 0; by < numRows; by++) {
 		for (int bx = 0; bx < numColumns; bx++) {
@@ -49,7 +74,7 @@ int getBasicFeaturesIndices(const int **screen, int blockWidth, int blockHeight,
 			// Determine which colors are present
 			for (int x = xo; x < xo + blockWidth; x++){
 				for (int y = yo; y < yo + blockHeight; y++){
-					unsigned char pixel = screen[y][x];
+					u_char pixel = getPixel(y, x, screen, screenHeight, screenWidth);
 					pixel = pixel >> 1;
 					hasColor[pixel] = true;
 				}
@@ -68,7 +93,9 @@ int getBasicFeaturesIndices(const int **screen, int blockWidth, int blockHeight,
 	return featureIndex;
 }
 
-void addRelativeFeaturesIndices(const int **screen, int featureIndex, vector<vector<tuple<int, int> > > &whichColors, long numRows, long numColumns, long numColors, vector<int>& features){
+void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
+    vector<vector<tuple<int, int> > > &whichColors, long numRows,
+    long numColumns, long numColors, vector<int>& features){
 
 	vector<tuple<int,int> > changed;
 	vector<vector<bool> > bproExistence;
@@ -104,7 +131,9 @@ void addRelativeFeaturesIndices(const int **screen, int featureIndex, vector<vec
                     tuple<int,int> pos(rowDelta,columnDelta);
                     changed.push_back(pos);
                     bproExistence[rowDelta][columnDelta] = false;
-                    features.push_back(numBasicFeatures + (numColors + numColors - c1 + 1) * c1/2 * numRowOffsets * numColumnOffsets + rowDelta * numColumnOffsets + columnDelta);
+                    features.push_back(numBasicFeatures + (numColors + numColors - c1 + 1) 
+                        * c1/2 * numRowOffsets * numColumnOffsets 
+                        + rowDelta * numColumnOffsets + columnDelta);
                 }
             }
         }
@@ -112,15 +141,18 @@ void addRelativeFeaturesIndices(const int **screen, int featureIndex, vector<vec
 
         for(int c2 = c1 + 1; c2 < numColors; c2++){
             if(whichColors[c1].size() > 0 && whichColors[c2].size() > 0){
-                for(vector<tuple<int,int> >::iterator it1 = whichColors[c1].begin(); it1 != whichColors[c1].end(); it1++){
-                    for(vector<tuple<int,int> >::iterator it2 = whichColors[c2].begin(); it2 != whichColors[c2].end(); it2++){
+                for(t_iter it1 = whichColors[c1].begin(); it1 != whichColors[c1].end(); it1++){
+                    for(t_iter it2 = whichColors[c2].begin(); it2 != whichColors[c2].end(); it2++){
                         int rowDelta = get<0>(*it1) - get<0>(*it2) + numRows - 1;
                         int columnDelta = get<1>(*it1) - get<1>(*it2) + numColumns - 1;
                         if(bproExistence[rowDelta][columnDelta]){
                             tuple<int,int> pos(rowDelta, columnDelta);
                             changed.push_back(pos);
                             bproExistence[rowDelta][columnDelta] = false;
-                            features.push_back(numBasicFeatures + (numColors + numColors - c1 + 1) * c1/2 * numRowOffsets * numColumnOffsets + (c2 - c1) * numRowOffsets * numColumnOffsets + rowDelta * numColumnOffsets + columnDelta);
+                            features.push_back(numBasicFeatures + (numColors + numColors - c1 + 1)
+                                * c1/2 * numRowOffsets * numColumnOffsets
+                                + (c2 - c1) * numRowOffsets * numColumnOffsets
+                                + rowDelta * numColumnOffsets + columnDelta);
                         }
                     }
                 }
@@ -131,7 +163,8 @@ void addRelativeFeaturesIndices(const int **screen, int featureIndex, vector<vec
 }
 
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed){
-    for (vector<tuple<int,int> >::iterator it = changed.begin(); it!=changed.end(); it++){
+
+    for (t_iter it = changed.begin(); it!=changed.end(); it++){
         bproExistence[get<0>(*it)][get<1>(*it)] = true;
     }
     changed.clear();
