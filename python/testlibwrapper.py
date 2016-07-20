@@ -1,3 +1,16 @@
+''' Simple example for using the functions that implement B-PROS, B-PROST and Blob-PROST
+    features. This implementation is supposed to show how one can use the invoke the code
+    provided in C using ctypes. The implemented feature sets were originally introduced in
+    the paper below. 
+
+    Yitao Liang, Marlos C. Machado, Erik Talvitie, Michael H. Bowling:
+    State of the Art Control of Atari Games Using Shallow Reinforcement Learning. 
+    AAMAS 2016: 485-493
+
+    Author: Marlos C. Machado
+'''
+
+# Required imports
 import os
 import sys
 import ctypes
@@ -7,38 +20,23 @@ from random import randrange
 
 from ale_python_interface import ALEInterface
 
-np.set_printoptions(threshold=np.inf)
-
+# Ctypes part
 path = os.getcwd() + '/visual_features.so'
 visual_features = ctypes.CDLL(path)
 
+# Global variables that encode the representation parameters
+numRows      = 14
+numCols      = 16
+numColors    = 128
 screenHeight = 210
 screenWidth  = 160
 
-class Parameters:
-	def __init__(self, pRows = 14, pColumns = 16, pColors = 128):
-		self.numRows    = pRows
-		self.numColumns = pColumns
-		self.numColors  = pColors
-
-	def getNumRows(self):
-		return self.numRows
-
-	def getNumColumns(self):
-		return self.numColumns
-
-	def getNumColors(self):
-		return self.numColors
-
 
 def main():
-	# just a simple check first
+	# just a simple check first, we really need this rom file ;)
 	if len(sys.argv) < 2:
   		print('Usage: %s rom_file' % sys.argv[0])
   		sys.exit()
-
-  	# this is just to simplify the code
-	param = Parameters(14, 16, 128)
 	
 	# Arcade Learning Environment
 	ale      = ALEInterface()
@@ -49,19 +47,20 @@ def main():
 	# get the list of legal actions
 	legal_actions = ale.getLegalActionSet()
 
-	print visual_features.getNumberOfFeatures(param.getNumRows(), 
-		param.getNumColumns(), param.getNumColors())
+	#This is how you get the total number of features:
+	print 'Max. number of features:', \
+		visual_features.getNumberOfFeatures(numRows, numCols, numColors)
 
+	# We now get the current ALE screen and put it in a format acceptable by the C code
 	pyScreen = ale.getScreen().astype(int)
-
 	screen = (ctypes.c_char_p * len(pyScreen))()
 	screen[:] = pyScreen
 
-	visual_features.getBROSFeatures(screen, screenHeight, screenWidth, 
-		param.getNumRows(), param.getNumColumns(), param.getNumColors())
+	# We finally call the function that returns the feature set
+	visual_features.getBROSFeatures(screen, screenHeight, screenWidth, numRows, numCols, numColors)
 
-	# we play the game once, we need data (screens)
-	# to call the functions we are interested at
+	# We play the game once. The code above shows how we can use the function, 
+	# but in the loop we can check how fast this implementation is (TODO)
 	total_reward = 0
 	while not ale.game_over():
 		a = legal_actions[randrange(len(legal_actions))]

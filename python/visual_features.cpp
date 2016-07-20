@@ -1,11 +1,30 @@
+/* Library implementing B-PROS, B-PROST and Blob-PROST features. These feature sets
+   were originally introduced in the paper below. 
+
+   Yitao Liang, Marlos C. Machado, Erik Talvitie, Michael H. Bowling:
+   State of the Art Control of Atari Games Using Shallow Reinforcement Learning. 
+   AAMAS 2016: 485-493
+
+   This is not the code originally used to run those experiments. This is supposed to
+   be a version that is detached from learning algorithms so people can plug and play.
+   Although this file can be included and used in a C/C++ implementation (with minor
+   changes), it was intended to be the basis of the Python interface.
+
+   Author: Marlos C. Machado (part of the original code was written by Yitao Liang).
+*/
+
 #include <set>
 #include <tuple>
 #include <vector>
 
 using namespace std;
 
+/* These are just to make the code less verbose. */
+
 typedef unsigned char u_char;
 typedef vector<tuple<int,int> >::iterator t_iter;
+
+/* Declarations required prior to its use. */
 
 int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWidth,
     int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors, 
@@ -20,6 +39,11 @@ void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed);
 
 
+/* This function returns the maximum number of features that can be generated given
+   the number of tiles (numRows and numColumns) and the number of colors (numColors)
+   to be used by this representation. This is useful knowledge so we can allocate
+   vectors with the appropriate size (although they should be very sparse.
+*/
 extern "C" int getNumberOfFeatures(long numRows, long numColumns, long numColors){
     
     long long numBasicFeatures = numColumns * numRows * numColors;
@@ -29,6 +53,11 @@ extern "C" int getNumberOfFeatures(long numRows, long numColumns, long numColors
 }
 
 
+/* This function returns a vector containing the indices that are not zero in the
+   representation. Because the representation is binary, it is much more efficient
+   to generate the indices than to generate the whole (huge) vector with a bunch of
+   zeros. B-PROS features are described in the reference aforementioned.
+*/
 extern "C" void getBROSFeatures(const u_char *screen, long screenHeight, long screenWidth, 
     long numRows, long numColumns, long numColors){
 
@@ -38,25 +67,33 @@ extern "C" void getBROSFeatures(const u_char *screen, long screenHeight, long sc
 
 	vector<vector<tuple<int, int> > > whichColors(numColors);
 
-	// We first get the Basic features, keeping track of the 
-    // next featureIndex vector. We don't just use the Basic
-    // implementation because we need the whichColors information.
+	// We first get the Basic features, keeping track of the next featureIndex vector.
 	int featureIndex = getBasicFeaturesIndices(screen, screenHeight, screenWidth,
         blockWidth, blockHeight, whichColors, numRows, numColumns, numColors, features);
-	
+
+    // We now add the PROS features, the pairwise combination of pixels.
     addRelativeFeaturesIndices(screen, featureIndex, whichColors,
         numRows, numColumns, numColors, features);
 
-	//Bias
+	// Bias
 	features.push_back(getNumberOfFeatures(numRows, numColumns, numColors));
 }
 
-
+/* Because this is used by the Python interface, in the ALE one receives a vector
+   concatenating all matrix rows. Because of that, this method is required to make
+   sure we can still access the matrix given x, y coordinates.
+*/
 u_char getPixel(int i, int j, const u_char *screen, long screenHeight, long screenWidth){
 
     return screen[i * screenWidth + j];
 }
 
+/* Implementation of Basic features, originally proposed in the paper below.
+
+   Marc G. Bellemare, Yavar Naddaf, Joel Veness, Michael Bowling:
+   The Arcade Learning Environment: An Evaluation Platform for General Agents. 
+   J. Artif. Intell. Res. (JAIR) 47: 253-279 (2013)
+*/
 int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWidth,
     int blockWidth, int blockHeight, vector<vector<tuple<int, int> > > &whichColors,
     int numRows, int numColumns, int numColors, vector<int>& features){
@@ -64,9 +101,7 @@ int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWi
     int featureIndex = 0;
 	// For each pixel block
 	for (int by = 0; by < numRows; by++) {
-		for (int bx = 0; bx < numColumns; bx++) {
-			//vector<boost::tuple<int, int, int> > posAndColor;
-			
+		for (int bx = 0; bx < numColumns; bx++) {			
 			int xo = bx * blockWidth;
 			int yo = by * blockHeight;
 			vector<bool> hasColor(numColors, false);
@@ -93,6 +128,10 @@ int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWi
 	return featureIndex;
 }
 
+/* This function is the one that really implement the 'PROS' part of B-PROS.
+   It adds all the pairwise combinations of relative positions on the screen.
+   See reference available in the header for further details.
+*/
 void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
     vector<vector<tuple<int, int> > > &whichColors, long numRows,
     long numColumns, long numColors, vector<int>& features){
@@ -162,6 +201,7 @@ void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
     }
 }
 
+/* Just a simple method that reset the bproExistence vector. */
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed){
 
     for (t_iter it = changed.begin(); it!=changed.end(); it++){
