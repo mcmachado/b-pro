@@ -76,7 +76,6 @@ def main():
 			screen = pyScreen.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
 			# we finally call the function that stores the feature vector inside the object
 			bpros.getActiveFeatures(screen)
-			print len(bpros)
 			# we randomly select an action in the environment to observe the next state
 			a = legal_actions[random.randrange(len(legal_actions))]
 			reward = ale.act(a);
