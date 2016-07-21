@@ -19,7 +19,7 @@ import ctypes
 
 class BPROS(object):
     # loading C++ code using CTypes
-    path = os.getcwd() + '/visual_features.so'
+    path = os.getcwd() + '/BPROSLibrary.so'
     bpros_features = ctypes.CDLL(path)
     # args and return types for constructor
     bpros_features.new_vector.restype = ctypes.c_void_p
