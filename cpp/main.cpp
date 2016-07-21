@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 
     float elapsedTime;
 	struct timeval tvBegin, tvEnd, tvDiff;
-	vector<int>* features;
+	vector<int> features;
 
     // Arcade Learning Environment
     ALEInterface ale;
@@ -60,10 +60,9 @@ int main(int argc, char** argv) {
         gettimeofday(&tvBegin, NULL);
         while (!ale.game_over()) {
         	// we now get the current ALE screen and put it in an acceptable format
-        	ALEScreen ale_screen = ale.getScreen();
-        	unsigned char* screen = (unsigned char*) &ale_screen;
+            unsigned char* screen = ale.getScreen().getArray();
         	// we finally call the function that stores the feature vector inside the object
-        	getBROSFeatures(features, screen, screenHeight,
+            getBROSFeatures(&features, screen, screenHeight,
         		screenWidth, numRows, numCols, numColors);
         	// we randomly select an action in the environment to observe the next state
             Action a = legal_actions[rand() % legal_actions.size()];
@@ -76,7 +75,7 @@ int main(int argc, char** argv) {
 		elapsedTime = float(tvDiff.tv_sec) + float(tvDiff.tv_usec)/1000000.0;
 		float fps = (ale.getFrameNumber() - previousFrameCount)/elapsedTime;
 		previousFrameCount = ale.getFrameNumber();
-        cout << "Episode " << episode << " ended with score " << totalReward << " running at " << fps << " fps." <<endl;
+        cout << "Episode " << episode + 1 << " ended with score " << totalReward << " running at " << fps << " fps." <<endl;
         ale.reset_game();
     }
 

@@ -102,7 +102,7 @@ int getBasicFeaturesIndices(const u_char *screen, int screenHeight, int screenWi
     int featureIndex = 0;
 	// For each pixel block
 	for (int by = 0; by < numRows; by++) {
-		for (int bx = 0; bx < numColumns; bx++) {			
+		for (int bx = 0; bx < numColumns; bx++) {
 			int xo = bx * blockWidth;
 			int yo = by * blockHeight;
 			vector<bool> hasColor(numColors, false);
