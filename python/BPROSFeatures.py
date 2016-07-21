@@ -38,7 +38,7 @@ class BPROS(object):
     bpros_features.vector_get.argtypes = [ctypes.c_void_p, ctypes.c_int]
     # args and return types for the functions we really care about
     bpros_features.getBROSFeatures.restype = None
-    bpros_features.getBROSFeatures.argtypes = [ctypes.c_void_p, (ctypes.c_int * 33600), \
+    bpros_features.getBROSFeatures.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_int), \
     	ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int]
     bpros_features.getNumberOfFeatures.restype = ctypes.c_int
     bpros_features.getNumberOfFeatures.argtypes = [ctypes.c_void_p]

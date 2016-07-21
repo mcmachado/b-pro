@@ -73,10 +73,7 @@ def main():
 		while not ale.game_over():
 			# we now get the current ALE screen and put it in a format acceptable by the C code
 			pyScreen = ale.getScreen()
-			screen = (ctypes.c_int * len(pyScreen))()
-			for i in xrange(len(pyScreen)):
-				screen[i] = pyScreen[i]
-
+			screen = pyScreen.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
 			# we finally call the function that stores the feature vector inside the object
 			bpros.getActiveFeatures(screen)
 			print len(bpros)
