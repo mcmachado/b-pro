@@ -44,17 +44,16 @@ extern "C" {
         return new vector<int>;
     }
     void delete_vector(vector<int>* v){
-        cout << "Destructor called in C++ for " << v << endl;
         delete v;
+    }
+    void clear_vector(vector<int>* v){
+        v->clear();
     }
     int vector_size(vector<int>* v){
         return v->size();
     }
     int vector_get(vector<int>* v, int i){
         return v->at(i);
-    }
-    void vector_push_back(vector<int>* v, int i){
-        v->push_back(i);
     }
 }
 
@@ -90,12 +89,9 @@ extern "C" void getBROSFeatures(vector<int>* features, const u_char *screen, int
 	int featureIndex = getBasicFeaturesIndices(screen, screenHeight, screenWidth,
         blockWidth, blockHeight, whichColors, numRows, numColumns, numColors, features);
 
-    printf("Num Basic Features: %ld\n", features->size());
     // We now add the PROS features, the pairwise combination of pixels.
     addRelativeFeaturesIndices(screen, featureIndex, whichColors,
         numRows, numColumns, numColors, features);
-
-    printf("Total Num Features: %ld\n", features->size() + 1);
 
 	// Bias
 	features->push_back(getNumberOfFeatures(numRows, numColumns, numColors));
