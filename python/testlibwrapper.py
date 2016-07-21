@@ -38,6 +38,20 @@ def main():
 	ale      = ALEInterface()
 	ale.setInt(b'random_seed', 123)
 	ale.setInt(b'frame_skip', 5)
+
+	# Set USE_SDL to true to display the screen. ALE must be compilied
+	# with SDL enabled for this to work. On OSX, pygame init is used to
+	# proxy-call SDL_main.
+	USE_SDL = False
+	if USE_SDL:
+	  if sys.platform == 'darwin':
+	    import pygame
+	    pygame.init()
+	    ale.setBool('sound', False) # Sound doesn't work on OSX
+	  elif sys.platform.startswith('linux'):
+	    ale.setBool('sound', True)
+	  ale.setBool('display_screen', True)
+
 	# load rom provided in the command line
 	rom_file = str.encode(sys.argv[1])
 	ale.loadROM(rom_file)
@@ -61,7 +75,7 @@ def main():
 			screen = (ctypes.c_int * len(pyScreen))()
 			# we finally call the function that stores the feature vector inside the object
 			bpros.getActiveFeatures(screen)
-			#print len(bpros)
+			print len(bpros)
 			# we randomly select an action in the environment to observe the next state
 			a = legal_actions[random.randrange(len(legal_actions))]
 			reward = ale.act(a);
