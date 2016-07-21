@@ -65,6 +65,7 @@ def main():
 	print 'Size of action set:', bpros.getSizeActionSet()
 
 	# we play the game, requesting the screen at each iteration.
+	pyScreen = []
 	previousFrameCount = 0
 	for episode in xrange(5):
 		total_reward = 0
@@ -73,6 +74,9 @@ def main():
 			# we now get the current ALE screen and put it in a format acceptable by the C code
 			pyScreen = ale.getScreen()
 			screen = (ctypes.c_int * len(pyScreen))()
+			for i in xrange(len(pyScreen)):
+				screen[i] = pyScreen[i]
+
 			# we finally call the function that stores the feature vector inside the object
 			bpros.getActiveFeatures(screen)
 			print len(bpros)
