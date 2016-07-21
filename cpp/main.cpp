@@ -62,8 +62,10 @@ int main(int argc, char** argv) {
         	// we now get the current ALE screen and put it in an acceptable format
             unsigned char* screen = ale.getScreen().getArray();
         	// we finally call the function that stores the feature vector inside the object
+            features.clear();
             getBROSFeatures(&features, screen, screenHeight,
         		screenWidth, numRows, numCols, numColors);
+            printf("%d\n", features.size());
         	// we randomly select an action in the environment to observe the next state
             Action a = legal_actions[rand() % legal_actions.size()];
             float reward = ale.act(a);
