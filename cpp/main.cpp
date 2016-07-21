@@ -65,7 +65,6 @@ int main(int argc, char** argv) {
             features.clear();
             getBROSFeatures(&features, screen, screenHeight,
         		screenWidth, numRows, numCols, numColors);
-            printf("%d\n", features.size());
         	// we randomly select an action in the environment to observe the next state
             Action a = legal_actions[rand() % legal_actions.size()];
             float reward = ale.act(a);
