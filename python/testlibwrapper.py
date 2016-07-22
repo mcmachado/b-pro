@@ -19,6 +19,7 @@ import ctypes
 import numpy as np
 
 from BPROSFeatures import BPROS
+from BPROSTFeatures import BPROST
 from ale_python_interface import ALEInterface
 
 # global variables that encode the representation parameters
@@ -59,10 +60,12 @@ def main():
 	legal_actions = ale.getLegalActionSet()
 
 	# we instantiate the class implementing the desired representation
-	bpros = BPROS(screenHeight, screenWidth, numRows, numCols, numColors)
+	#bpros = BPROS(screenHeight, screenWidth, numRows, numCols, numColors)
+	bprost = BPROST(screenHeight, screenWidth, numRows, numCols, numColors)
 
 	# this is how you get the total number of features:
-	print 'Size of action set:', bpros.getSizeActionSet()
+	#print 'Size of action set:', bpros.getSizeActionSet()
+	print 'Size of action set:', bprost.getSizeActionSet()
 
 	# we play the game, requesting the screen at each iteration.
 	pyScreen = []
@@ -75,7 +78,8 @@ def main():
 			pyScreen = ale.getScreen()
 			screen = pyScreen.ctypes.data_as(ctypes.POINTER(ctypes.c_int))
 			# we finally call the function that stores the feature vector inside the object
-			bpros.getActiveFeatures(screen)
+			#bpros.getActiveFeatures(screen)
+			bprost.getActiveFeatures(screen)
 			# we randomly select an action in the environment to observe the next state
 			a = legal_actions[random.randrange(len(legal_actions))]
 			reward = ale.act(a);
