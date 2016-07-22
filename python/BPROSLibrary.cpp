@@ -1,5 +1,5 @@
-/* Library implementing B-PROS, B-PROST and Blob-PROST features. These feature sets
-   were originally introduced in the paper below. 
+/* Library implementing B-PROS features. These feature sets were originally
+   introduced in the paper below. 
 
    Yitao Liang, Marlos C. Machado, Erik Talvitie, Michael H. Bowling:
    State of the Art Control of Atari Games Using Shallow Reinforcement Learning. 
@@ -94,7 +94,7 @@ extern "C" void getBROSFeatures(vector<int>* features, const u_char *screen, int
         numRows, numColumns, numColors, features);
 
 	// Bias
-	features->push_back(getNumberOfFeatures(numRows, numColumns, numColors));
+	features->push_back(getNumberOfFeatures(numRows, numColumns, numColors) - 1);
 }
 
 /* Because this is used by the Python interface, in the ALE one receives a vector
