@@ -18,9 +18,14 @@
 #include <vector>
 #include <iostream>
 
-#include "visual_features.hpp"
+#include "BPROSLibrary.hpp"
 
 using namespace std;
+
+/* These are just to make the code less verbose. */
+
+typedef unsigned char u_char;
+typedef vector<tuple<int,int> >::iterator t_iter;
 
 /* Declarations required prior to its use. */
 
@@ -34,11 +39,6 @@ void addRelativeFeaturesIndices(const u_char *screen, int featureIndex,
     int numColumns, int numColors, vector<int> *features);
 
 void resetBproExistence(vector<vector<bool> >& bproExistence, vector<tuple<int,int> >& changed);
-
-/* These are just to make the code less verbose. */
-
-typedef unsigned char u_char;
-typedef vector<tuple<int,int> >::iterator t_iter;
 
 /* This function returns the maximum number of features that can be generated given
    the number of tiles (numRows and numColumns) and the number of colors (numColors)

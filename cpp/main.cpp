@@ -14,7 +14,9 @@
 #include <ale_interface.hpp>
 
 #include "timer.hpp"
-#include "visual_features.hpp"
+//We cannot have both includes, they have the same functions
+//#include "BPROSLibrary.hpp"
+#include "BPROSTLibrary.hpp"
 
 #ifdef __USE_SDL
   #include <SDL.h>
@@ -63,7 +65,7 @@ int main(int argc, char** argv) {
             unsigned char* screen = ale.getScreen().getArray();
         	// we finally call the function that stores the feature vector inside the object
             features.clear();
-            getBROSFeatures(&features, screen, screenHeight,
+            getBROSTFeatures(&features, screen, screenHeight,
         		screenWidth, numRows, numCols, numColors);
         	// we randomly select an action in the environment to observe the next state
             Action a = legal_actions[rand() % legal_actions.size()];

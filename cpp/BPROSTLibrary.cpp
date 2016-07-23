@@ -14,15 +14,10 @@
 */
 
 #include <set>
-#include <tuple>
-#include <vector>
+
+#include "BPROSTLibrary.hpp"
 
 using namespace std;
-
-/* These are just to make the code less verbose. */
-
-typedef unsigned char u_char;
-typedef vector<tuple<int,int> >::iterator t_iter;
 
 /* Declarations required prior to its use. */
 
@@ -44,30 +39,12 @@ void addTimeOffsetsIndices(vector<vector<tuple<int,int> > > &whichColors,
 void resetPairwiseExistence(vector<vector<bool> >& pairwiseExistence,
     vector<tuple<int,int> >& pairwiseChanged);
 
-extern "C" {
-    vector<int>* new_vector(){
-        return new vector<int>;
-    }
-    void delete_vector(vector<int>* v){
-        delete v;
-    }
-    void clear_vector(vector<int>* v){
-        v->clear();
-    }
-    int vector_size(vector<int>* v){
-        return v->size();
-    }
-    int vector_get(vector<int>* v, int i){
-        return v->at(i);
-    }
-}
-
 /* This function returns the maximum number of features that can be generated given
    the number of tiles (numRows and numColumns) and the number of colors (numColors)
    to be used by this representation. This is useful knowledge so we can allocate
    vectors with the appropriate size (although they should be very sparse.
 */
-extern "C" int getNumberOfFeatures(int numRows, int numColumns, int numColors){
+int getNumberOfFeatures(int numRows, int numColumns, int numColors){
 
     int numBasicFeatures = numColumns * numRows * numColors;
     int numRelativeFeatures = (2 * numColumns - 1) * (2 * numRows - 1) 
@@ -76,7 +53,7 @@ extern "C" int getNumberOfFeatures(int numRows, int numColumns, int numColors){
     return numBasicFeatures + numRelativeFeatures +numTimeDimensionalOffsets + 1;
 }
 
-extern "C" void getBROSTFeatures(vector<int>* features, const u_char *screen, int screenHeight,
+void getBROSTFeatures(vector<int>* features, const u_char *screen, int screenHeight,
     int screenWidth, int numRows, int numColumns, int numColors){
 
     int blockWidth  = screenWidth  / numColumns;
