@@ -55,7 +55,7 @@ int main(int argc, char** argv){
 	ale.setBool("color_averaging", true);
 	ale.setFloat("repeat_action_probability", 0.00);
 	ale.setInt("random_seed", param.getSeed());
-	ale.setFloat("frame_skip", param.getNumStepsPerAction());
+	ale.setInt("frame_skip", param.getNumStepsPerAction());
 	ale.setInt("max_num_frames_per_episode", param.getEpisodeLength());
 
 	ale.loadROM(param.getRomPath().c_str());
